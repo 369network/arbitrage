@@ -269,44 +269,44 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const loginBtn = document.getElementById('loginBtn');
 
-            // Disable button and show loading
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="loading"></span>Signing in...';
+                // Disable button and show loading
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span class="loading"></span>Signing in...';
 
-            try {
-                const response = await fetch('/api/auth-login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
+                try {
+                    const response = await fetch('/api/auth-login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
 
-                const data = await response.json();
+                    const data = await response.json();
 
-                if (response.ok && data.success) {
-                    // Store session data
-                    localStorage.setItem('session', JSON.stringify(data.session));
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    
-                    // Redirect to dashboard
-                    window.location.href = '/index.html';
-                } else {
-                    showError(data.error || 'Invalid email or password');
+                    if (response.ok && data.success) {
+                        // Store session data
+                        localStorage.setItem('session', JSON.stringify(data.session));
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        
+                        // Redirect to dashboard
+                        window.location.href = '/index.html';
+                    } else {
+                        showError(data.error || 'Invalid email or password');
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'Sign In';
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showError('Connection error. Please try again.');
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = 'Sign In';
                 }
-            } catch (error) {
-                console.error('Login error:', error);
-                showError('Connection error. Please try again.');
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Sign In';
-            }
             });
 
             // Check if already logged in
