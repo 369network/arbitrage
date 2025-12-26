@@ -24,7 +24,21 @@ class Dashboard {
     // Data Management
     async loadData() {
         try {
-            const response = await fetch('api/get_data.php');
+            // Get auth token from localStorage
+            const session = JSON.parse(localStorage.getItem('session'));
+            const token = session?.access_token;
+            
+            const response = await fetch('/api/get_data', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
             
             this.clients = data.clients || [];
@@ -861,9 +875,16 @@ class Dashboard {
     // CRUD Operations
     async addClient(data) {
         try {
-            const response = await fetch('api/clients.php', {
+            // Get auth token from localStorage
+            const session = JSON.parse(localStorage.getItem('session'));
+            const token = session?.access_token;
+            
+            const response = await fetch('/api/clients', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(data)
             });
             const result = await response.json();
