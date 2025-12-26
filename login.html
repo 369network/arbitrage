@@ -265,8 +265,10 @@
             setTimeout(() => errorDiv.classList.remove('show'), 5000);
         }
 
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -305,10 +307,9 @@
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = 'Sign In';
             }
-        });
+            });
 
-        // Check if already logged in
-        window.addEventListener('DOMContentLoaded', () => {
+            // Check if already logged in
             const session = localStorage.getItem('session');
             if (session) {
                 window.location.href = '/index.html';
