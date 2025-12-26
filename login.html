@@ -265,9 +265,8 @@
             setTimeout(() => errorDiv.classList.remove('show'), 5000);
         }
 
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        // Attach event listener (DOM is already loaded since script is at bottom)
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const email = document.getElementById('email').value;
@@ -307,14 +306,13 @@
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = 'Sign In';
                 }
-            });
-
-            // Check if already logged in
-            const session = localStorage.getItem('session');
-            if (session) {
-                window.location.href = '/index.html';
-            }
         });
+
+        // Check if already logged in
+        const session = localStorage.getItem('session');
+        if (session) {
+            window.location.href = '/index.html';
+        }
     </script>
 </body>
 </html>
