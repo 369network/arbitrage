@@ -23,45 +23,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Sign in with Supabase Auth
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    // Temporary: Check against hardcoded credentials until Supabase Auth is set up
+    const validCredentials = {
+      'contact@369network.com': { password: 'Spidigoo@#369', role: 'admin', name: '369Network Admin', client_id: null },
+      'vpmedia@369network.com': { password: 'Password@#123', role: 'client', name: 'VPMedia', client_id: 'VPM001' },
+      'thebes@369network.com': { password: 'Password@#123', role: 'client', name: 'Thebes', client_id: 'THB001' },
+      'usaman@369network.com': { password: 'Password@#123', role: 'client', name: 'Usmanbhai', client_id: 'USM001' }
+    };
 
-    if (error) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    const userCreds = validCredentials[email.toLowerCase()];
+    
+    if (!userCreds || userCreds.password !== password) {
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Get user details
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', data.user.id)
-      .single();
-
-    if (userError) {
-      return res.status(500).json({ error: 'Failed to fetch user data' });
-    }
-
-    // Log activity
-    await supabase.from('activity_log').insert({
-      user_id: data.user.id,
-      action: 'login',
-      details: 'User logged in',
-      ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress
-    });
+    // Create session data
+    const sessionData = {
+      access_token: 'temp_token_' + Date.now(),
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+      user: {
+        email: email,
+        id: email.replace('@', '_').replace('.', '_')
+      }
+    };
 
     return res.status(200).json({
       success: true,
       user: {
-        id: userData.id,
-        email: userData.email,
-        name: userData.name,
-        role: userData.role,
-        client_id: userData.client_id
+        id: email.replace('@', '_').replace('.', '_'),
+        email: email,
+        name: userCreds.name,
+        role: userCreds.role,
+        client_id: userCreds.client_id
       },
-      session: data.session
+      session: sessionData
     });
 
   } catch (error) {
