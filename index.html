@@ -23,7 +23,8 @@
                 const userData = JSON.parse(user);
                 
                 // Check if session has expired (optional)
-                if (sessionData.expires_at && new Date(sessionData.expires_at) < new Date()) {
+                // expires_at is in seconds, convert to milliseconds for Date
+                if (sessionData.expires_at && new Date(sessionData.expires_at * 1000) < new Date()) {
                     localStorage.removeItem('session');
                     localStorage.removeItem('user');
                     window.location.href = '/login.html';
