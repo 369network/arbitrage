@@ -44,6 +44,8 @@ class Dashboard {
             this.clients = data.clients || [];
             this.domains = data.domains || [];
             this.transactions = data.transactions || [];
+            this.monthlyData = data.monthlyData || {};
+            this.summary = data.summary || {};
             
             this.updateDashboard();
         } catch (error) {
@@ -892,23 +894,15 @@ class Dashboard {
             const result = await response.json();
             
             if (result.success) {
-                this.clients.push(result.client);
-                this.updateClientsGrid();
                 this.showToast('Client Added', `${data.name} has been added successfully.`, 'success');
+                // Reload all data to ensure everything is in sync
+                await this.loadData();
+            } else {
+                this.showToast('Error', result.error || 'Failed to add client', 'error');
             }
         } catch (error) {
             console.error('Error adding client:', error);
-            // Add locally for demo
-            this.clients.push({
-                id: 'CLT' + Date.now(),
-                ...data,
-                status: 'active',
-                totalRevenue: 0,
-                totalExpense: 0,
-                profit: 0,
-                domains: []
-            });
-            this.updateClientsGrid();
+            this.showToast('Error', 'Failed to add client. Please try again.', 'error');
             this.showToast('Client Added', `${data.name} has been added successfully.`, 'success');
         }
     }
