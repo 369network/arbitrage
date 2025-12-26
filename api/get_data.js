@@ -124,8 +124,34 @@ export default async function handler(req, res) {
       monthlyDataFormatted[key].clientShare = profit / 2;
     });
 
+    // Enrich clients with calculated fields
+    const enrichedClients = (clients || []).map(client => {
+      // Find domains for this client
+      const clientDomains = domains?.filter(d => d.client_id === client.id) || [];
+      
+      // Calculate totals from monthly_data
+      let totalRevenue = 0;
+      let totalExpense = 0;
+      
+      clientDomains.forEach(domain => {
+        const domainData = monthlyData?.filter(md => md.domain_id === domain.id) || [];
+        domainData.forEach(md => {
+          totalRevenue += parseFloat(md.revenue || 0);
+          totalExpense += parseFloat(md.expense || 0);
+        });
+      });
+      
+      return {
+        ...client,
+        totalRevenue,
+        totalExpense,
+        profit: totalRevenue - totalExpense,
+        domains: clientDomains.map(d => d.domain_name)
+      };
+    });
+
     return res.status(200).json({
-      clients: clients || [],
+      clients: enrichedClients,
       domains: domains || [],
       transactions: payments || [],
       monthlyData: monthlyDataFormatted,
@@ -133,7 +159,7 @@ export default async function handler(req, res) {
         totalRevenue,
         totalExpense,
         totalProfit,
-        activeClients: clients?.length || 0,
+        activeClients: enrichedClients.length,
         activeDomains: domains?.length || 0
       }
     });
