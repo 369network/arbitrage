@@ -28,12 +28,36 @@ class Dashboard {
             const session = JSON.parse(localStorage.getItem('session'));
             const token = session?.access_token;
             
+            if (!token) {
+                console.warn('No token found, redirecting to login...');
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Check if token is expired
+            if (session.expires_at && new Date(session.expires_at * 1000) < new Date()) {
+                console.warn('Session expired, redirecting to login...');
+                localStorage.removeItem('session');
+                localStorage.removeItem('user');
+                window.location.href = '/login.html?session_expired=true';
+                return;
+            }
+            
             const response = await fetch('/api/get_data', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
+            
+            if (response.status === 401) {
+                // Token is invalid or expired
+                console.warn('Unauthorized, redirecting to login...');
+                localStorage.removeItem('session');
+                localStorage.removeItem('user');
+                window.location.href = '/login.html?session_expired=true';
+                return;
+            }
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -883,6 +907,12 @@ class Dashboard {
             const session = JSON.parse(localStorage.getItem('session'));
             const token = session?.access_token;
             
+            if (!token) {
+                this.showToast('Error', 'Session expired. Please login again.', 'error');
+                setTimeout(() => window.location.href = '/login.html', 2000);
+                return;
+            }
+            
             const response = await fetch('/api/clients', {
                 method: 'POST',
                 headers: { 
@@ -891,9 +921,20 @@ class Dashboard {
                 },
                 body: JSON.stringify(data)
             });
+            
+            if (response.status === 401) {
+                this.showToast('Error', 'Session expired. Please login again.', 'error');
+                setTimeout(() => {
+                    localStorage.removeItem('session');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login.html?session_expired=true';
+                }, 2000);
+                return;
+            }
+            
             const result = await response.json();
             
-            if (result.success) {
+            if (result.success || response.ok) {
                 this.showToast('Client Added', `${data.name} has been added successfully.`, 'success');
                 // Reload all data to ensure everything is in sync
                 await this.loadData();
