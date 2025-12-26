@@ -26,7 +26,15 @@ export default async function handler(req, res) {
     console.log('Is admin:', userIsAdmin, 'for user:', user.id);
 
     if (!userIsAdmin) {
-      return res.status(403).json({ error: 'Forbidden - Admin access required. User role check failed.' });
+      // Return detailed error for debugging
+      return res.status(403).json({ 
+        error: 'Forbidden - Admin access required. User role check failed.',
+        debug: {
+          userId: user.id,
+          userEmail: user.email,
+          isAdmin: userIsAdmin
+        }
+      });
     }
 
     // GET - List all clients
