@@ -903,7 +903,6 @@ class Dashboard {
         } catch (error) {
             console.error('Error adding client:', error);
             this.showToast('Error', 'Failed to add client. Please try again.', 'error');
-            this.showToast('Client Added', `${data.name} has been added successfully.`, 'success');
         }
     }
 

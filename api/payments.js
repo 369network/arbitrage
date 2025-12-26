@@ -13,16 +13,20 @@ export default async function handler(req, res) {
 
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
+    console.log('[Payments API] Token received:', token ? 'Yes' : 'No');
+    
     const user = await verifyToken(token);
+    console.log('[Payments API] User verified:', user ? user.id : 'No user');
 
     if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized - Invalid or missing token' });
     }
 
     const userIsAdmin = await isAdmin(user.id);
+    console.log('[Payments API] Is admin:', userIsAdmin, 'for user:', user.id);
 
     if (!userIsAdmin) {
-      return res.status(403).json({ error: 'Forbidden - Admin access required' });
+      return res.status(403).json({ error: 'Forbidden - Admin access required. User role check failed.' });
     }
 
     // GET - List all payments
