@@ -1,4 +1,3 @@
-<!-- Authentication will be handled by JavaScript -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +6,39 @@
     <title>369Network - Admin Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Authentication check - redirect to login if not authenticated
+        (function() {
+            const session = localStorage.getItem('session');
+            const user = localStorage.getItem('user');
+            
+            if (!session || !user) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Verify session is still valid
+            try {
+                const sessionData = JSON.parse(session);
+                const userData = JSON.parse(user);
+                
+                // Check if session has expired (optional)
+                if (sessionData.expires_at && new Date(sessionData.expires_at) < new Date()) {
+                    localStorage.removeItem('session');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                console.log('User authenticated:', userData.email);
+            } catch (e) {
+                console.error('Invalid session data');
+                localStorage.removeItem('session');
+                localStorage.removeItem('user');
+                window.location.href = '/login.html';
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="dashboard-container">

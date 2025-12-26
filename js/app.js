@@ -497,6 +497,15 @@ class Dashboard {
 
     // Event Listeners
     initEventListeners() {
+        // Logout button
+        const logoutBtn = document.querySelector('.logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await this.handleLogout();
+            });
+        }
+
         // Month navigation
         document.querySelectorAll('.month-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1171,6 +1180,33 @@ class Dashboard {
             info: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
         };
         return icons[type] || icons.info;
+    }
+
+    async handleLogout() {
+        try {
+            const session = localStorage.getItem('session');
+            if (session) {
+                const sessionData = JSON.parse(session);
+                
+                // Call logout API
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionData.access_token}`
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            // Clear local storage
+            localStorage.removeItem('session');
+            localStorage.removeItem('user');
+            
+            // Redirect to login
+            window.location.href = '/login.html';
+        }
     }
 }
 
