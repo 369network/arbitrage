@@ -200,6 +200,8 @@ class Dashboard {
                 const modalId = trigger.dataset.modal;
                 const modal = document.getElementById(modalId);
                 if (modal) {
+                    // Populate client dropdowns before showing modal
+                    this.populateClientDropdowns(modal);
                     modal.classList.add('active');
                     document.body.style.overflow = 'hidden';
                 }
@@ -912,13 +914,81 @@ class Dashboard {
     }
 
     async addDomain(data) {
-        this.showToast('Domain Added', `${data.domain} has been added successfully.`, 'success');
-        this.updateDomainsTable();
+        try {
+            // Get auth token from localStorage
+            const session = JSON.parse(localStorage.getItem('session'));
+            const token = session?.access_token;
+            
+            const response = await fetch('/api/domains', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                this.domains.push(result.domain);
+                this.updateDomainsTable();
+                this.showToast('Domain Added', `${data.name} has been added successfully.`, 'success');
+            } else {
+                this.showToast('Error', result.error || 'Failed to add domain', 'error');
+            }
+        } catch (error) {
+            console.error('Error adding domain:', error);
+            this.showToast('Error', 'Failed to add domain. Please try again.', 'error');
+        }
     }
 
     async addTransaction(data) {
-        this.showToast('Transaction Recorded', 'Payment has been recorded successfully.', 'success');
-        this.updatePaymentsHistory();
+        try {
+            // Get auth token from localStorage
+            const session = JSON.parse(localStorage.getItem('session'));
+            const token = session?.access_token;
+            
+            const response = await fetch('/api/payments', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showToast('Payment Recorded', 'Payment has been recorded successfully.', 'success');
+                this.updatePaymentsHistory();
+                // Reload data to reflect changes
+                await this.loadData();
+            } else {
+                this.showToast('Error', result.error || 'Failed to record payment', 'error');
+            }
+        } catch (error) {
+            console.error('Error recording payment:', error);
+            this.showToast('Error', 'Failed to record payment. Please try again.', 'error');
+        }
+    }
+
+    // Populate client dropdowns in modals
+    populateClientDropdowns(modal) {
+        const clientSelects = modal.querySelectorAll('select[name="client_id"]');
+        clientSelects.forEach(select => {
+            // Clear existing options except the first one
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            
+            // Add client options
+            this.clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = client.name;
+                select.appendChild(option);
+            });
+        });
     }
 
     // Search

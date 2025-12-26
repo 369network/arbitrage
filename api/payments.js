@@ -25,40 +25,38 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Forbidden - Admin access required' });
     }
 
-    // GET - List all domains
+    // GET - List all payments
     if (req.method === 'GET') {
       const { data, error } = await supabase
-        .from('domains')
+        .from('payments')
         .select('*, clients(name, client_code)')
-        .order('created_at', { ascending: false });
+        .order('payment_date', { ascending: false });
 
       if (error) {
         return res.status(500).json({ error: error.message });
       }
 
-      return res.status(200).json({ success: true, domains: data });
+      return res.status(200).json({ success: true, payments: data });
     }
 
-    // POST - Create new domain
+    // POST - Create new payment
     if (req.method === 'POST') {
-      const { client_id, name, domain_name, country, traffic_source, campaign, status } = req.body;
-      
-      // Accept either 'name' or 'domain_name'
-      const finalDomainName = domain_name || name;
+      const { client_id, type, amount, payment_date, method, notes } = req.body;
 
-      if (!client_id || !finalDomainName) {
-        return res.status(400).json({ error: 'Missing required fields: client_id and domain name' });
+      if (!client_id || !type || !amount || !payment_date) {
+        return res.status(400).json({ error: 'Missing required fields: client_id, type, amount, payment_date' });
       }
 
       const { data, error } = await supabase
-        .from('domains')
+        .from('payments')
         .insert([{
           client_id,
-          domain_name: finalDomainName,
-          country: country || null,
-          traffic_source: traffic_source || null,
-          campaign: campaign || null,
-          status: status || 'active'
+          payment_type: type,
+          amount: parseFloat(amount),
+          payment_date,
+          payment_method: method || 'bank_transfer',
+          notes: notes || null,
+          status: 'completed'
         }])
         .select()
         .single();
@@ -70,24 +68,24 @@ export default async function handler(req, res) {
       // Log activity
       await supabase.from('activity_log').insert({
         user_id: user.id,
-        action: 'create_domain',
-        details: `Created domain: ${domain_name}`,
+        action: 'create_payment',
+        details: `Recorded payment: $${amount} for client ${client_id}`,
         ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress
       });
 
-      return res.status(201).json({ success: true, domain: data });
+      return res.status(201).json({ success: true, payment: data });
     }
 
-    // PUT - Update domain
+    // PUT - Update payment
     if (req.method === 'PUT') {
       const { id, ...updates } = req.body;
 
       if (!id) {
-        return res.status(400).json({ error: 'Domain ID is required' });
+        return res.status(400).json({ error: 'Payment ID is required' });
       }
 
       const { data, error } = await supabase
-        .from('domains')
+        .from('payments')
         .update(updates)
         .eq('id', id)
         .select()
@@ -100,24 +98,24 @@ export default async function handler(req, res) {
       // Log activity
       await supabase.from('activity_log').insert({
         user_id: user.id,
-        action: 'update_domain',
-        details: `Updated domain: ${id}`,
+        action: 'update_payment',
+        details: `Updated payment: ${id}`,
         ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress
       });
 
-      return res.status(200).json({ success: true, domain: data });
+      return res.status(200).json({ success: true, payment: data });
     }
 
-    // DELETE - Delete domain
+    // DELETE - Delete payment
     if (req.method === 'DELETE') {
       const { id } = req.query;
 
       if (!id) {
-        return res.status(400).json({ error: 'Domain ID is required' });
+        return res.status(400).json({ error: 'Payment ID is required' });
       }
 
       const { error } = await supabase
-        .from('domains')
+        .from('payments')
         .delete()
         .eq('id', id);
 
@@ -128,18 +126,18 @@ export default async function handler(req, res) {
       // Log activity
       await supabase.from('activity_log').insert({
         user_id: user.id,
-        action: 'delete_domain',
-        details: `Deleted domain: ${id}`,
+        action: 'delete_payment',
+        details: `Deleted payment: ${id}`,
         ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress
       });
 
-      return res.status(200).json({ success: true, message: 'Domain deleted' });
+      return res.status(200).json({ success: true, message: 'Payment deleted' });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (error) {
-    console.error('Domains API error:', error);
+    console.error('Payments API error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

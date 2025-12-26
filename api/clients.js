@@ -41,20 +41,24 @@ export default async function handler(req, res) {
 
     // POST - Create new client
     if (req.method === 'POST') {
-      const { client_code, name, email, phone, revenue_share } = req.body;
+      const { client_code, name, email, phone, revenue_share, status } = req.body;
 
-      if (!client_code || !name || !email) {
-        return res.status(400).json({ error: 'Missing required fields' });
+      if (!name || !email) {
+        return res.status(400).json({ error: 'Missing required fields: name and email' });
       }
+
+      // Auto-generate client_code if not provided (first 3 letters of name + random number)
+      const finalClientCode = client_code || `${name.substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 1000)}`;
 
       const { data, error } = await supabase
         .from('clients')
         .insert([{
-          client_code,
+          client_code: finalClientCode,
           name,
           email,
-          phone,
-          revenue_share: revenue_share || 50.00
+          phone: phone || null,
+          revenue_share: revenue_share || 50.00,
+          status: status || 'active'
         }])
         .select()
         .single();

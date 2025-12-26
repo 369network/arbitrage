@@ -49,3 +49,4 @@ temp/
 # Test files
 test-dashboard.html
 
+.env*.local
