@@ -1189,7 +1189,7 @@ class Dashboard {
                 const sessionData = JSON.parse(session);
                 
                 // Call logout API
-                await fetch('/api/auth/logout', {
+                await fetch('/api/auth-logout', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -20,10 +20,6 @@
     {
       "src": "api/*.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "api/auth/*.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
